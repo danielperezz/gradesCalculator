@@ -1,0 +1,41 @@
+{
+    "name": "First Chrome Extension",
+    "description": "Build an Extension!",
+    "version": "0.01",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "host_permissions": [
+        "https://students.technion.ac.il/local/tcurricular/grades"
+    ],
+    "externally_connectable": {
+        "ids": [
+            "*"
+        ]
+    },
+    "permissions": [
+        "tabs",
+        "background",
+        "activeTab",
+        "scripting"
+    ],
+    "action": {
+        "default_title": "Scraper",
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://students.technion.ac.il/local/tcurricular/grades"
+            ],
+            "js": [
+                "contentScript.js"
+            ],
+            "css": [
+                "contentScript.css"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "manifest_version": 3
+}
