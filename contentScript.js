@@ -1,3 +1,7 @@
+const BLUE_TEXT = "#0A66C2";
+const GREY_BORDER = "#ccc"
+const BLUE_BORDER = "#aed0dd"
+
 function setInputBoxes(tables)
     {
         for (let i=2; i<tables.length; i++)
@@ -108,15 +112,16 @@ function setInputBoxes(tables)
         const fict_grade = parseInt(entered_value);
         if (fict_grade<101 && fict_grade>0)
         {
-            input_box.style.border = "2px solid green";
+            input_box.style.border = "2px solid "+BLUE_BORDER;
             return fict_grade;
         }
         else
         {
-            input_box.style.border = "2px solid black";
+            input_box.style.border = "2px solid "+GREY_BORDER;
             return real_grade;
         }  
     };
+
 
     function newCourseValidateInput(enterdGrade, enteredCredit)
     {
@@ -139,116 +144,57 @@ function setInputBoxes(tables)
             {
                 const inputBox = course.children[4];
                 const realGrade = course.children[3].innerText;
-                const effectiveGrade = checkInput(inputBox, realGrade);
-                const credit = course.children[2].innerText;
-                sum += (parseFloat(credit))*effectiveGrade;
-                creditSum += parseFloat(credit);
+                if (realGrade != undefined)
+                {
+                    const effectiveGrade = checkInput(inputBox, realGrade);
+                    const credit = course.children[2].innerText;
+                    sum += (parseFloat(credit))*effectiveGrade;
+                    creditSum += parseFloat(credit);
+                } 
             }
         }
         if (isWholeAverage==true)
         {
-            console.log(fictCoursesTable.children[0]);
             for (let i=1; i<fictCoursesTable.children.length; i++)
             {
                 const curRow = fictCoursesTable.children[i];
                 var creditInput = curRow.children[0].children[0];
                 var gradeInput = curRow.children[1].children[0];
-                console.log(curRow.children[0]);
                 var enteredCredit = creditInput.value;
                 var enterdGrade = gradeInput.value;
                 if (newCourseValidateInput(enterdGrade, enteredCredit))
                 {
-                    gradeInput.style.border = "2px solid green";
-                    creditInput.style.border = "2px solid green";
+                    gradeInput.style.border = "2px solid "+BLUE_BORDER;
+                    creditInput.style.border = "2px solid "+ BLUE_BORDER;
                     sum += (parseFloat(enteredCredit))*enterdGrade;
                     creditSum += parseFloat(enteredCredit);
                 }
                 else 
                 {
-                    gradeInput.style.border = "2px solid black";
-                    creditInput.style.border = "2px solid black";
+                    gradeInput.style.border = "2px solid " + GREY_BORDER;
+                    creditInput.style.border = "2px solid "+ GREY_BORDER;
                 }
             }
         }
         const newAverage = (sum/parseFloat(creditSum)).toFixed(1);
         averageUI.innerText = newAverage;
-        averageUI.style.color = "blue";
+        averageUI.style.color = BLUE_TEXT;
     }
 
-function disableExtension()
-{
-    const inputBoxes = document.getElementsByTagName("input");
-    const buttons = document.getElementsByTagName("button");
-    const dividers = document.getElementsByClassName("divider");
-    const tables = document.getElementsByClassName("courses-table");
-    const ths = document.getElementsByClassName("courses-table"); //tables -> th
-    const headings = document.getElementsByClassName("courses-table"); // table -> heading
-    var union = [...new Set([...inputBoxes, ...buttons, ...dividers, ...tables, ...ths, ...headings])];
-    
-    for (const element of union)
-    {
-        element.style.display = 'none';
-    }
-}
 
-function enableExtension()
-{
-    const inputBoxes = document.getElementsByTagName("input");
-    for (const inputBox of inputBoxes)
-    {
-        inputBox.style.display = 'inline-block';
-    }
-    const buttons = document.getElementsByTagName("button");
-    for (const button of buttons)
-    {
-        button.style.display = 'inline-block';
-    }
-    const dividers = document.getElementsByClassName("divider");
-    for (const divider of dividers)
-    {
-        divider.style.display = 'block';
-    }
-    const tables = document.getElementsByClassName("courses-table");
-    for (const table of tables)
-    {
-        table.style.display = 'table-row-group';
-    }
-    const ths = document.getElementsByClassName("courses-th");
-    const headings = document.getElementsByClassName("courses-heading");
-  
-}
-
-//run starts here
-const tables = document.querySelectorAll('tbody');
-const averages = document.querySelectorAll('tfoot');
-setInputBoxes(tables);
-const coursesTable = setNewCousesTable();
-setTableButtons(averages, tables, coursesTable);
-setTotalButton(tables, coursesTable);
-chrome.runtime.sendMessage({cmd: "getActivityStatus"}, function(response)
-{
-    if(response)
-    {
-        enableExtension();
-    }
-    else
-    {
-        disableExtension();
-    }
-}); 
-
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => 
+// run starts here
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => 
 {  
-    sendResponse({status: 'ok'});
-
-    if(message.command === "enable")
+    if (request.cmd === "run")
     {
-        enableExtension();
-    };
-    if (message.command === "disable")
-    {
-        disableExtension();
-    }   
+        const tables = document.querySelectorAll('tbody');
+        const averages = document.querySelectorAll('tfoot');
+        setInputBoxes(tables);
+        const coursesTable = setNewCousesTable();
+        setTableButtons(averages, tables, coursesTable);
+        setTotalButton(tables, coursesTable);
+        sendResponse({status: "ok"});
+        console.log("response sent");
+    }
 });
 
