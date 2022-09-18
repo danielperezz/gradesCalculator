@@ -12,16 +12,13 @@ chrome.runtime.onInstalled.addListener(async () => {
   });
 
   chrome.runtime.onMessage.addListener(
-    function(msg, sender, sendResponse){
-      if (msg.cmd = "getStatus")
-      {
-        sendResponse({value: activityStatus});
-      }
-      if (msg.cmd == "setStatus")
-      {
-        activityStatus = msg.data;
-        console.log(msg.data);
-        sendResponse({res: "set"});
-      }
+    function (request, sender, sendResponse) {
+        if (request.cmd === "setActivityStatus") {
+            activityStatus = request.data;
+            sendResponse("set");
+        }
 
+        if (request.cmd === "getActivityStatus") {
+            sendResponse(activityStatus);
+        }
     });

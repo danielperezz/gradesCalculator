@@ -2,39 +2,26 @@ import { getCurrentTab } from "./utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => 
 {
-    
     const activeTab = await getCurrentTab();
     if (activeTab.url == "https://students.technion.ac.il/local/tcurricular/grades")
     {
-        const container = document.getElementsByClassName("container")[0];
-        // const activateSwitch = document.createElement("input");
-        // const activateLabel = document.createElement("label");
-        // activateSwitch.type = "checkbox";
-        // activateSwitch.id = "activate";
-        // activateLabel.for = "activate";
-        container.innerHTML =
-        `<h1>Activate</h1>
-        <input type="checkbox" id="activate" /><label for="activate"></label>
-        <div class="msg">
-            <!-- <p>msg would appear here</p> -->
-        </div>
-        <script src="popup.js"></script>`;
+        popUpUI(true);
         var activateSwitch = document.querySelector("input[id=activate]");
-        // container.appendChild(activateSwitch);
-        // container.appendChild(activateLabel);
-        chrome.runtime.sendMessage({ cmd: "getStatus"}, function(response){
-                activateSwitch.checked = response.value;
-                console.log(response.value);
-        });
+        chrome.runtime.sendMessage({cmd: "getActivityStatus"}, function(response)
+        {
+            activityStatusUI(response, activateSwitch);
+        }); 
 
         activateSwitch.addEventListener('change', function()
         {
             if(this.checked) 
             {
-                chrome.runtime.sendMessage({ cmd: "setStatus" , data: true}, function(response){
-                    console.log("SENT MESSAGE");
-                    console.log(response.res);
-                });   
+                activityStatusUI(true, activateSwitch);
+                chrome.runtime.sendMessage({cmd: "setActivityStatus", data: true}, function(response)
+                {
+                    console.log(response);
+                }); 
+                
                 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) 
                 {
                     if(tabs.length == 0)
@@ -43,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () =>
                     }
                     else
                     {
-                    chrome.tabs.sendMessage(tabs[0].id, {command:"run"}, function()
+                    chrome.tabs.sendMessage(tabs[0].id, {command:"enable"}, function()
                     {
                         console.log("Hello");
                     });
@@ -52,16 +39,68 @@ document.addEventListener("DOMContentLoaded", async () =>
             }
             else
             {
-                chrome.runtime.sendMessage({ cmd: "setStatus" , data: false}, function(response){
-                    console.log(response.res);
-                });   
+                activityStatusUI(false, activateSwitch);
+                chrome.runtime.sendMessage({cmd: "setActivityStatus", data: false});
+                chrome.tabs.query({active: true, currentWindow: true}, function(tabs) 
+                {
+                    if(tabs.length == 0)
+                    { 
+                        console.log("could not send mesage to current tab");
+                    }
+                    else
+                    {
+                    chrome.tabs.sendMessage(tabs[0].id, {command:"disable"}, function()
+                    {
+                        console.log("Hello");
+                    });
+                    };  
+                });
             }
                 
         });
     }
     else {
-        const container = document.getElementsByClassName("container")[0];
-        container.innerHTML = '<p>This Is not a grades page</p>';
-        // container.innerHTML = '<h1>This is not a grades page</h1>';
+        popUpUI(false);
     };
 });
+
+function popUpUI(isCorrectPage)
+{
+    var correctPageDiv = document.getElementById("correct-page");
+    var randomPageDiv = document.getElementById("random-page");
+    if(isCorrectPage)
+    {
+        correctPageDiv.style.display = 'block';
+        randomPageDiv.style.display = 'none';
+    }
+    else
+    {
+        correctPageDiv.style.display = 'none';
+        randomPageDiv.style.display = 'block';
+        var gradesButton = document.getElementById("grades-link");
+        gradesButton.addEventListener('click', function()
+        {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                var tab = tabs[0];
+                window.close();
+                chrome.tabs.update(tab.id, {url: 'https://students.technion.ac.il/local/tcurricular/grades'});
+            });
+        });
+
+    }
+}
+
+function activityStatusUI(isActive, activateSwitch)
+{
+    var heading = document.getElementById('enable');
+    console.log(heading);
+    if (isActive)
+    {
+        activateSwitch.checked = isActive;
+        heading.innerHTML = "Disable";
+    }
+    else{
+        activateSwitch.checked = isActive;
+        heading.innerHTML= "Enable";
+    }
+}

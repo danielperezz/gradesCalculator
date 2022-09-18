@@ -1,19 +1,4 @@
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => 
-{  
-    sendResponse({status: 'ok'});
-
-    if(message.command === "run")
-    {
-        const tables = document.querySelectorAll('tbody');
-        const averages = document.querySelectorAll('tfoot');
-
-        setInputBoxes(tables);
-        const coursesTable = setNewCousesTable();
-        setTableButtons(averages, tables, coursesTable);
-        setTotalButton(tables, coursesTable);
-    };
-
-    function setInputBoxes(tables)
+function setInputBoxes(tables)
     {
         for (let i=2; i<tables.length; i++)
         {
@@ -73,6 +58,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) =>
         gradeHeader.className= "courses-th";
         creditHeader.className= "courses-th";
         heading.className = "courses-heading";
+        headingTable.className = "courses-table";
 
         addNewCourseButton.innerHTML = "הוסף קורס";
         creditHeader.innerHTML="נקודות";
@@ -111,12 +97,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) =>
             courseRow.appendChild(gradeCell);
             creditCell.appendChild(newCourseCreditInput);
             gradeCell.appendChild(alternativeGradeInput);
-
-            const headings = document.getElementsByTagName("input");
-            for(const heading of headings)
-            {
-                heading.style.display= 'none';
-            }
         });   
 
         return coursesTable;
@@ -142,7 +122,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) =>
     {
         const fictGrade = parseInt(enterdGrade);
         const fictCredit = parseFloat(enteredCredit);
-        if (fictGrade<101 && fictGrade>0 && fictCredit%0.5==0 && fictCredit>=0 && fictCredit<=10 )
+        if (fictGrade<101 && fictGrade>0 && fictCredit%0.5==0 && fictCredit>=0 && fictCredit<=12 )
         {
             return true;
         }
@@ -194,5 +174,81 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) =>
         averageUI.innerText = newAverage;
         averageUI.style.color = "blue";
     }
+
+function disableExtension()
+{
+    const inputBoxes = document.getElementsByTagName("input");
+    const buttons = document.getElementsByTagName("button");
+    const dividers = document.getElementsByClassName("divider");
+    const tables = document.getElementsByClassName("courses-table");
+    const ths = document.getElementsByClassName("courses-table"); //tables -> th
+    const headings = document.getElementsByClassName("courses-table"); // table -> heading
+    var union = [...new Set([...inputBoxes, ...buttons, ...dividers, ...tables, ...ths, ...headings])];
+    
+    for (const element of union)
+    {
+        element.style.display = 'none';
+    }
+}
+
+function enableExtension()
+{
+    const inputBoxes = document.getElementsByTagName("input");
+    for (const inputBox of inputBoxes)
+    {
+        inputBox.style.display = 'inline-block';
+    }
+    const buttons = document.getElementsByTagName("button");
+    for (const button of buttons)
+    {
+        button.style.display = 'inline-block';
+    }
+    const dividers = document.getElementsByClassName("divider");
+    for (const divider of dividers)
+    {
+        divider.style.display = 'block';
+    }
+    const tables = document.getElementsByClassName("courses-table");
+    for (const table of tables)
+    {
+        table.style.display = 'table-row-group';
+    }
+    const ths = document.getElementsByClassName("courses-th");
+    const headings = document.getElementsByClassName("courses-heading");
+  
+}
+
+//run starts here
+const tables = document.querySelectorAll('tbody');
+const averages = document.querySelectorAll('tfoot');
+setInputBoxes(tables);
+const coursesTable = setNewCousesTable();
+setTableButtons(averages, tables, coursesTable);
+setTotalButton(tables, coursesTable);
+chrome.runtime.sendMessage({cmd: "getActivityStatus"}, function(response)
+{
+    if(response)
+    {
+        enableExtension();
+    }
+    else
+    {
+        disableExtension();
+    }
+}); 
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => 
+{  
+    sendResponse({status: 'ok'});
+
+    if(message.command === "enable")
+    {
+        enableExtension();
+    };
+    if (message.command === "disable")
+    {
+        disableExtension();
+    }   
 });
 

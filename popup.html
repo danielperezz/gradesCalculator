@@ -1,25 +1,16 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="popup.css" />
-    <title>Document</title>
-</head>
-
-<body>
-    <div class="container">
-        
-
-    </div>
-</body>
-
-</html> -->
-
 <link href="popup.css" rel="stylesheet" type="text/css" />
 <script type="module" src="popup.js"></script>
 
-<div class="container">
-    <div>
-    </div>
+<div class="container" style="z-index: 1; position: absolute; top: 10px; left: 85px;">
+    <img src="logo25.png" alt="logo" style="width:25; height:25; margin-top: 10px; margin-right: 10px;" />
+    <h3 style="color: #073462;">Technion Grades Calculator</h3>
+</div>
+<div id="correct-page" style="z-index: 1; position: absolute; top: 50px; left: 150px;">
+    <h1 id="enable"></h1>
+    <input type="checkbox" id="activate" /><label for="activate"></label>
+</div>
+
+<div id="random-page" style="z-index: 1; position: absolute; top: 50px; left: 70px;">
+    <h3>Go to your grades page, see if I can help</h3>
+    <button id="grades-link">Your Grades</button>
 </div>
