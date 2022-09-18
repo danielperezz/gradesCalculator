@@ -185,16 +185,16 @@ function setInputBoxes(tables)
 // run starts here
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => 
 {  
-    if (request.cmd === "run")
-    {
+    if (request.cmd === 'run') {
+        sendResponse(true);
         const tables = document.querySelectorAll('tbody');
         const averages = document.querySelectorAll('tfoot');
         setInputBoxes(tables);
         const coursesTable = setNewCousesTable();
         setTableButtons(averages, tables, coursesTable);
         setTotalButton(tables, coursesTable);
-        sendResponse({status: "ok"});
-        console.log("response sent");
-    }
+        return Promise.resolve('done');
+      }
+      return false;
 });
 

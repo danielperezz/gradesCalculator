@@ -16,12 +16,10 @@ chrome.runtime.onInstalled.addListener(async () =>
 });
 
 
-chrome.tabs.onUpdated.addListener(async function(tabId, changeInfo, tab) 
+chrome.tabs.onUpdated.addListener((tabId, changedInfo, tab) =>
 {
-  var tab = await getCurrentTab();
+  if (changedInfo.status === "complete" && tab.url && tab.url==="https://students.technion.ac.il/local/tcurricular/grades") {
   {
-    if (tab.url == "https://students.technion.ac.il/local/tcurricular/grades")
-    {
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) 
       {
           if(tabs.length == 0)
@@ -30,22 +28,12 @@ chrome.tabs.onUpdated.addListener(async function(tabId, changeInfo, tab)
           }
           else
           {
-            sendMessageToContent();
+              chrome.tabs.sendMessage(tabs[0].id, {cmd: "run"}, function(response)
+              {
+                console.log("hey there");
+              });
           } 
       });
     }
   }
 });
-
-function sendMessageToContent()
-{
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, {cmd: "run"}, function(response) {
-      if(chrome.runtime.lastError) {
-        setTimeout(sendMessageToContent, 10000);
-      }
-      //console.log(response.status);
-    });
-  });
-  
-}
