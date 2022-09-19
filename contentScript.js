@@ -1,6 +1,7 @@
 const BLUE_TEXT = "#0A66C2";
-const GREY_BORDER = "#ccc"
-const BLUE_BORDER = "#aed0dd"
+const GREY_BORDER = "#ccc";
+const BLUE_BORDER = "#aed0dd";
+const PASS_GRADE = 55;
 
 function setInputBoxes(tables)
     {
@@ -22,9 +23,10 @@ function setInputBoxes(tables)
             const semester_button = document.createElement('button');
             semester_button.innerHTML = "חשב ממוצע סמסטר";
             averages[i].childNodes[1].appendChild(semester_button);
-            let averageUI = averages[i].childNodes[1].childNodes[7].childNodes[1];
+            const averageUI = averages[i].childNodes[1].childNodes[7].childNodes[1];
+            const successRateUI = averages[i].childNodes[1].childNodes[7].childNodes[4]; //TODO: 
             semester_button.addEventListener('click', function(){
-                onPress(Array.from(tables).slice(i+1, i+2), averageUI, fictCoursesTable=fictCoursesTable); //the raltionship between the tbody and it's foot
+                onPress(Array.from(tables).slice(i+1, i+2), averageUI, successRateUI, fictCoursesTable=fictCoursesTable); //the raltionship between the tbody and it's foot
             });
         }
     }
@@ -37,8 +39,9 @@ function setInputBoxes(tables)
         whole_button.style.paddingBlock = "100xp";
         firstTable[0].appendChild(whole_button);
         const wholeAverageUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(2)");
+        const successRateUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(4)"); //TODO:
         whole_button.addEventListener('click', function(){
-            onPress(Array.from(tables).slice(2), wholeAverageUI, fictcoursesTable, true);
+            onPress(Array.from(tables).slice(2), wholeAverageUI, successRateUI, fictcoursesTable, true);
         });
     }
 
@@ -134,10 +137,11 @@ function setInputBoxes(tables)
     }
 
 
-    function onPress(tbodies, averageUI, fictCoursesTable=null, isWholeAverage=false)
+    function onPress(tbodies, averageUI, successRateUI, fictCoursesTable=null, isWholeAverage=false)
     {
         let sum =0;
         let creditSum=0;
+        let passedCreditSum=0;
         for (let tbody of tbodies)
         {
             for (let course of tbody.children)
@@ -148,6 +152,10 @@ function setInputBoxes(tables)
                 {
                     const effectiveGrade = checkInput(inputBox, realGrade);
                     const credit = course.children[2].innerText;
+                    if (effectiveGrade>=PASS_GRADE)
+                    {
+                        passedCreditSum += parseFloat(credit);   
+                    }
                     sum += (parseFloat(credit))*effectiveGrade;
                     creditSum += parseFloat(credit);
                 } 
@@ -166,6 +174,10 @@ function setInputBoxes(tables)
                 {
                     gradeInput.style.border = "2px solid "+BLUE_BORDER;
                     creditInput.style.border = "2px solid "+ BLUE_BORDER;
+                    if (enterdGrade>=PASS_GRADE)
+                    {
+                        passedCreditSum += parseFloat(enteredCredit);
+                    }
                     sum += (parseFloat(enteredCredit))*enterdGrade;
                     creditSum += parseFloat(enteredCredit);
                 }
@@ -177,6 +189,9 @@ function setInputBoxes(tables)
             }
         }
         const newAverage = (sum/parseFloat(creditSum)).toFixed(1);
+        const newSuccessRate = (passedCreditSum/creditSum).toFixed(2);
+        successRateUI.innerText = newSuccessRate;
+        successRateUI.style.color = BLUE_TEXT;
         averageUI.innerText = newAverage;
         averageUI.style.color = BLUE_TEXT;
     }
