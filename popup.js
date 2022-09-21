@@ -6,20 +6,6 @@ document.addEventListener("DOMContentLoaded", async () =>
     if (activeTab.url == "https://students.technion.ac.il/local/tcurricular/grades")
     {
         popUpUI(true);
-        // chrome.tabs.query({active: true, currentWindow: true}, function(tabs) 
-        // {
-        //     if(tabs.length == 0)
-        //     { 
-        //         console.log("could not send mesage to current tab");
-        //     }
-        //     else
-        //     {
-        //     chrome.tabs.sendMessage(tabs[0].id, {command:"run"}, function()
-        //     {
-        //         console.log("Hello");
-        //     });
-        //     };  
-        // });
     }
     else {
         popUpUI(false);

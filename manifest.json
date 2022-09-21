@@ -1,6 +1,6 @@
 {
     "name": "Technion Grades Calculator",
-    "description": "Build an Extension!",
+    "description": "Extension to easily calculate GPA and success rates given an estimated grade",
     "version": "0.01",
     "icons": {
         "16": "logo16.png",

@@ -24,9 +24,10 @@ function setInputBoxes(tables)
             semester_button.innerHTML = "חשב ממוצע סמסטר";
             averages[i].childNodes[1].appendChild(semester_button);
             const averageUI = averages[i].childNodes[1].childNodes[7].childNodes[1];
-            const successRateUI = averages[i].childNodes[1].childNodes[7].childNodes[4]; //TODO: 
+            const successRateUI = averages[i].childNodes[1].childNodes[7].childNodes[4];
+            const creditUI = averages[i].childNodes[1].childNodes[5];
             semester_button.addEventListener('click', function(){
-                onPress(Array.from(tables).slice(i+1, i+2), averageUI, successRateUI, fictCoursesTable=fictCoursesTable); //the raltionship between the tbody and it's foot
+                onPress(Array.from(tables).slice(i+1, i+2), averageUI, successRateUI, creditUI, fictCoursesTable=fictCoursesTable); //the raltionship between the tbody and it's foot
             });
         }
     }
@@ -39,9 +40,10 @@ function setInputBoxes(tables)
         whole_button.style.paddingBlock = "100xp";
         firstTable[0].appendChild(whole_button);
         const wholeAverageUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(2)");
-        const successRateUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(4)"); //TODO:
+        const successRateUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(4)");
+        const creditUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(6)");
         whole_button.addEventListener('click', function(){
-            onPress(Array.from(tables).slice(2), wholeAverageUI, successRateUI, fictcoursesTable, true);
+            onPress(Array.from(tables).slice(2), wholeAverageUI, successRateUI, creditUI, fictcoursesTable, true, tables[1]);
         });
     }
 
@@ -128,16 +130,24 @@ function setInputBoxes(tables)
 
     function newCourseValidateInput(enterdGrade, enteredCredit)
     {
-        const fictGrade = parseInt(enterdGrade);
-        const fictCredit = parseFloat(enteredCredit);
-        if (fictGrade<101 && fictGrade>0 && fictCredit%0.5==0 && fictCredit>=0 && fictCredit<=12 )
+        if(!isNaN(enterdGrade) && !isNaN(enteredCredit))
         {
-            return true;
-        }
+            const fictGrade = parseInt(enterdGrade);
+            const fictCredit = parseFloat(enteredCredit);
+            if (fictGrade<101 && fictGrade>0 && fictCredit%0.5==0 && fictCredit>=0 && fictCredit<=12 )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        } 
+        return false;
     }
 
 
-    function onPress(tbodies, averageUI, successRateUI, fictCoursesTable=null, isWholeAverage=false)
+    function onPress(tbodies, averageUI, successRateUI, creditUI, fictCoursesTable=null, isWholeAverage=false, exemptionTable=null)
     {
         let sum =0;
         let creditSum=0;
@@ -148,18 +158,18 @@ function setInputBoxes(tables)
             {
                 const inputBox = course.children[4];
                 const realGrade = course.children[3].innerText;
-                if (realGrade != undefined)
+                const effectiveGrade = checkInput(inputBox, realGrade);
+                const credit = course.children[2].innerText;
+                if(newCourseValidateInput(effectiveGrade, credit))
                 {
-                    const effectiveGrade = checkInput(inputBox, realGrade);
-                    const credit = course.children[2].innerText;
                     if (effectiveGrade>=PASS_GRADE)
                     {
                         passedCreditSum += parseFloat(credit);   
                     }
                     sum += (parseFloat(credit))*effectiveGrade;
                     creditSum += parseFloat(credit);
-                } 
-            }
+                }
+            } 
         }
         if (isWholeAverage==true)
         {
@@ -190,6 +200,14 @@ function setInputBoxes(tables)
         }
         const newAverage = (sum/parseFloat(creditSum)).toFixed(1);
         const newSuccessRate = (passedCreditSum/creditSum).toFixed(2);
+        if (isWholeAverage)
+        {
+            // const exemptionCredit = exemptionTable.lastChild.children[2].innerText;
+            const exemptionCredit = exemptionTable.lastChild.previousElementSibling.children[2].innerText;
+            creditSum += parseFloat(exemptionCredit);
+        }
+        creditUI.innerText = creditSum.toFixed(1);
+        creditUI.style.color = BLUE_TEXT;
         successRateUI.innerText = newSuccessRate;
         successRateUI.style.color = BLUE_TEXT;
         averageUI.innerText = newAverage;
@@ -204,6 +222,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) =>
         sendResponse(true);
         const tables = document.querySelectorAll('tbody');
         const averages = document.querySelectorAll('tfoot');
+        console.log(tables);
         setInputBoxes(tables);
         const coursesTable = setNewCousesTable();
         setTableButtons(averages, tables, coursesTable);
