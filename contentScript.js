@@ -23,8 +23,26 @@ function setInputBoxes(tables)
             const semester_button = document.createElement('button');
             semester_button.innerHTML = "חשב ממוצע סמסטר";
             averages[i].childNodes[1].appendChild(semester_button);
-            const averageUI = averages[i].childNodes[1].childNodes[7].childNodes[1];
-            const successRateUI = averages[i].childNodes[1].childNodes[7].childNodes[4];
+            const tdElement = averages[i].childNodes[1].childNodes[7];
+            let averageUI = tdElement.childNodes[1];
+            let successRateUI = tdElement.childNodes[4];
+            if (!averageUI)
+            {
+                tdElement.innerHTML += "ממוצע סמסטר: ";
+                averageUI = document.createElement('strong');
+                tdElement.appendChild(averageUI);
+                tdElement.appendChild(document.createElement('br'))
+            }
+            if (!successRateUI)
+            {
+                const successRateLabel = document.createElement('span');
+                successRateLabel.innerText = "שיעור הצלחות סמסטר: "
+                tdElement.appendChild(successRateLabel);
+                //tdElement.innerHTML += "שיעור הצלחות סמסטר: "
+                successRateUI = document.createElement('strong');
+                tdElement.appendChild(successRateUI);
+                
+            }
             const creditUI = averages[i].childNodes[1].childNodes[5];
             semester_button.addEventListener('click', function(){
                 onPress(Array.from(tables).slice(i+1, i+2), averageUI, successRateUI, creditUI, fictCoursesTable=fictCoursesTable); //the raltionship between the tbody and it's foot
@@ -134,7 +152,7 @@ function setInputBoxes(tables)
         {
             const fictGrade = parseInt(enterdGrade);
             const fictCredit = parseFloat(enteredCredit);
-            if (fictGrade<101 && fictGrade>0 && fictCredit%0.5==0 && fictCredit>=0 && fictCredit<=12 )
+            if ((fictGrade<101 && fictGrade>=0) && fictCredit%0.5==0 && fictCredit>=0 && fictCredit<=200 )
             {
                 return true;
             }
@@ -152,6 +170,7 @@ function setInputBoxes(tables)
         let sum =0;
         let creditSum=0;
         let passedCreditSum=0;
+        let binaryPassCredit = 0;
         for (let tbody of tbodies)
         {
             for (let course of tbody.children)
@@ -168,6 +187,11 @@ function setInputBoxes(tables)
                     }
                     sum += (parseFloat(credit))*effectiveGrade;
                     creditSum += parseFloat(credit);
+                }
+                if(effectiveGrade=="עבר")
+                {
+                    passedCreditSum += parseFloat(credit);
+                    binaryPassCredit += parseFloat(credit);
                 }
             } 
         }
@@ -199,19 +223,32 @@ function setInputBoxes(tables)
             }
         }
         const newAverage = (sum/parseFloat(creditSum)).toFixed(1);
-        const newSuccessRate = (passedCreditSum/creditSum).toFixed(2);
         if (isWholeAverage)
         {
-            // const exemptionCredit = exemptionTable.lastChild.children[2].innerText;
             const exemptionCredit = exemptionTable.lastChild.previousElementSibling.children[2].innerText;
+            passedCreditSum += parseFloat(exemptionCredit);
             creditSum += parseFloat(exemptionCredit);
         }
-        creditUI.innerText = creditSum.toFixed(1);
-        creditUI.style.color = BLUE_TEXT;
-        successRateUI.innerText = newSuccessRate;
-        successRateUI.style.color = BLUE_TEXT;
-        averageUI.innerText = newAverage;
-        averageUI.style.color = BLUE_TEXT;
+        creditSum += binaryPassCredit;
+        
+        const newSuccessRate = (passedCreditSum/creditSum).toFixed(2);
+
+        if(!isNaN(creditSum))
+        {
+            creditUI.innerText = creditSum.toFixed(1);
+            creditUI.style.color = BLUE_TEXT;
+        } 
+        if(!isNaN(newSuccessRate))
+        {
+            successRateUI.innerText = newSuccessRate;
+            successRateUI.style.color = BLUE_TEXT;
+        } 
+        if(!isNaN(newAverage)) 
+        {
+            //TODO: figure out why it won't show up on the screen
+            averageUI.innerHTML = newAverage;
+            averageUI.style.color = BLUE_TEXT;
+        } 
     }
 
 
