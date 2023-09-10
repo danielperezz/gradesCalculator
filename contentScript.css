@@ -88,3 +88,24 @@ hr {
 .courses-heading {
     width: 150px !important;
 }
+
+toggle-button {
+    width: 84px;
+    min-width: 84px;
+    display: block;
+    padding: 4px;
+    border: 1px black solid;
+    border-radius: 60px;
+    transition: 0.5s;
+
+}
+
+toggle-switch-circle {
+    display: block;
+    width: 40px;
+    height: 40px;
+    border: 1px black solid;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.5s;
+}

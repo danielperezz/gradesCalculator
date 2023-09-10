@@ -2,6 +2,9 @@ const BLUE_TEXT = "#0A66C2";
 const GREY_BORDER = "#ccc";
 const BLUE_BORDER = "#aed0dd";
 const PASS_GRADE = 55;
+const ACTIVE = "ON";
+const NON_ACTIVE = "OFF";
+
 
 function setInputBoxes(tables)
     {
@@ -10,11 +13,30 @@ function setInputBoxes(tables)
             for(let row of tables[i].children)
             {
                 const alternativeGradeInput = document.createElement('input');
+                const activeCourse = document.createElement('button');
+                activeCourse.innerHTML = ACTIVE;
+                activeCourse.style.backgroundColor = BLUE_BORDER; 
+                activeCourse.addEventListener('click', function(){changeCourseStatus(activeCourse)});
                 alternativeGradeInput.type = "number";
                 row.appendChild(alternativeGradeInput);
+                row.appendChild(activeCourse);
             }
         }
     } 
+
+    function changeCourseStatus(activeCourse)
+    {
+        if(activeCourse.innerHTML==ACTIVE)
+        {
+            activeCourse.innerHTML = NON_ACTIVE;
+            activeCourse.style.backgroundColor = GREY_BORDER;
+        } else
+        {
+            activeCourse.innerHTML = ACTIVE;
+            activeCourse.style.backgroundColor = BLUE_BORDER;
+        }
+    }
+
 
     function setTableButtons(averages, tables, fictCoursesTable)
     {
@@ -167,6 +189,7 @@ function setInputBoxes(tables)
 
     function onPress(tbodies, averageUI, successRateUI, creditUI, fictCoursesTable=null, isWholeAverage=false, exemptionTable=null)
     {
+        const grades = new Map();
         let sum =0;
         let creditSum=0;
         let passedCreditSum=0;
@@ -176,24 +199,37 @@ function setInputBoxes(tables)
             for (let course of tbody.children)
             {
                 const inputBox = course.children[4];
-                const realGrade = course.children[3].innerText;
+                const activeButton = course.children[5];
+                const realGrade = course.children[3].innerText.replace(/\D/g, '');
                 const effectiveGrade = checkInput(inputBox, realGrade);
                 const credit = course.children[2].innerText;
-                if(newCourseValidateInput(effectiveGrade, credit))
+                const courseNum = course.children[0].children[0].getAttribute("data-course");
+                if(courseNum.startsWith("3948") && activeButton.innerHTML==ACTIVE)
                 {
-                    if (effectiveGrade>=PASS_GRADE)
-                    {
-                        passedCreditSum += parseFloat(credit);   
-                    }
-                    sum += (parseFloat(credit))*effectiveGrade;
-                    creditSum += parseFloat(credit);
+                    sum+=parseFloat(effectiveGrade);
+                    passedCreditSum+=parseFloat(credit);
+                    creditSum+=parseFloat(credit);
                 }
-                if(effectiveGrade=="עבר")
-                {
-                    passedCreditSum += parseFloat(credit);
-                    binaryPassCredit += parseFloat(credit);
-                }
+                else if((newCourseValidateInput(effectiveGrade, credit) || effectiveGrade=="עבר") && activeButton.innerHTML==ACTIVE)
+                    grades.set(courseNum, [credit, effectiveGrade]);
             } 
+        }
+
+        // sum up the results using the map
+        for(let [courseNum,[credit, effectiveGrade]] of grades)
+        {
+            console.log(courseNum, " : ", effectiveGrade);
+            if (effectiveGrade>=PASS_GRADE)
+            {
+                passedCreditSum += parseFloat(credit);   
+            }
+            sum += (parseFloat(credit))*effectiveGrade;
+            creditSum += parseFloat(credit);
+            if(effectiveGrade=="עבר")
+            {
+                passedCreditSum += parseFloat(credit);
+                binaryPassCredit += parseFloat(credit);
+            }
         }
         if (isWholeAverage==true)
         {
@@ -225,6 +261,7 @@ function setInputBoxes(tables)
         const newAverage = (sum/parseFloat(creditSum)).toFixed(1);
         if (isWholeAverage)
         {
+            //TODO: consider the option that THERE IS a grade here
             const exemptionCredit = exemptionTable.lastChild.previousElementSibling.children[2].innerText;
             passedCreditSum += parseFloat(exemptionCredit);
             creditSum += parseFloat(exemptionCredit);
@@ -245,7 +282,6 @@ function setInputBoxes(tables)
         } 
         if(!isNaN(newAverage)) 
         {
-            //TODO: figure out why it won't show up on the screen
             averageUI.innerHTML = newAverage;
             averageUI.style.color = BLUE_TEXT;
         } 
