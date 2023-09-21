@@ -8,18 +8,22 @@ const NON_ACTIVE = "OFF";
 
 function setInputBoxes(tables)
     {
-        for (let i=2; i<tables.length; i++)
+        for (let i=1; i<tables.length; i++)
         {
             for(let row of tables[i].children)
             {
-                const alternativeGradeInput = document.createElement('input');
-                const activeCourse = document.createElement('button');
-                activeCourse.innerHTML = ACTIVE;
-                activeCourse.style.backgroundColor = BLUE_BORDER; 
-                activeCourse.addEventListener('click', function(){changeCourseStatus(activeCourse)});
-                alternativeGradeInput.type = "number";
-                row.appendChild(alternativeGradeInput);
-                row.appendChild(activeCourse);
+                if(i!=1 || row!=tables[i].lastChild.previousElementSibling)
+                {
+
+                    const alternativeGradeInput = document.createElement('input');
+                    const activeCourse = document.createElement('button');
+                    activeCourse.innerHTML = ACTIVE;
+                    activeCourse.style.backgroundColor = BLUE_BORDER; 
+                    activeCourse.addEventListener('click', function(){changeCourseStatus(activeCourse)});
+                    alternativeGradeInput.type = "number";
+                    row.appendChild(alternativeGradeInput);
+                    row.appendChild(activeCourse);
+                }
             }
         }
     } 
@@ -83,7 +87,7 @@ function setInputBoxes(tables)
         const successRateUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(4)");
         const creditUI = document.querySelector("#region-main > div > table:nth-child(5) > tbody > tr:nth-child(3) > td:nth-child(6)");
         whole_button.addEventListener('click', function(){
-            onPress(Array.from(tables).slice(2), wholeAverageUI, successRateUI, creditUI, fictcoursesTable, true, tables[1]);
+            onPress(Array.from(tables).slice(1), wholeAverageUI, successRateUI, creditUI, fictcoursesTable, true, tables[1]);
         });
     }
 
@@ -196,29 +200,37 @@ function setInputBoxes(tables)
         let binaryPassCredit = 0;
         for (let tbody of tbodies)
         {
+            
             for (let course of tbody.children)
             {
-                const inputBox = course.children[4];
-                const activeButton = course.children[5];
-                const realGrade = course.children[3].innerText.replace(/\D/g, '');
-                const effectiveGrade = checkInput(inputBox, realGrade);
-                const credit = course.children[2].innerText;
-                const courseNum = course.children[0].children[0].getAttribute("data-course");
-                if(courseNum.startsWith("3948") && activeButton.innerHTML==ACTIVE)
+                // In case this is the last row in the exempti on table then don't do nothing
+                if(!(isWholeAverage && tbody==tbodies[0] && course==tbody.lastChild.previousElementSibling))
                 {
-                    sum+=parseFloat(effectiveGrade);
-                    passedCreditSum+=parseFloat(credit);
-                    creditSum+=parseFloat(credit);
+
+                    const inputBox = course.children[4];
+                    const activeButton = course.children[5];
+                    const realGrade = course.children[3].innerText.replace(/\D/g, '');
+                    const effectiveGrade = checkInput(inputBox, realGrade);
+                    const credit = course.children[2].innerText;
+                    const courseNum = course.children[0].children[0].getAttribute("data-course");
+                    if(courseNum.startsWith("3948") && activeButton.innerHTML==ACTIVE)
+                    {
+                        sum+=parseFloat(effectiveGrade);
+                        passedCreditSum+=parseFloat(credit);
+                        creditSum+=parseFloat(credit);
+                    }
+                    else if((newCourseValidateInput(effectiveGrade, credit) || effectiveGrade=="עבר") && activeButton.innerHTML==ACTIVE)
+                        grades.set(courseNum, [credit, effectiveGrade]);
+                    if(activeButton.innerHTML==NON_ACTIVE)
+                        inputBox.style.border = "2px solid "+GREY_BORDER;
                 }
-                else if((newCourseValidateInput(effectiveGrade, credit) || effectiveGrade=="עבר") && activeButton.innerHTML==ACTIVE)
-                    grades.set(courseNum, [credit, effectiveGrade]);
             } 
         }
 
         // sum up the results using the map
         for(let [courseNum,[credit, effectiveGrade]] of grades)
         {
-            console.log(courseNum, " : ", effectiveGrade);
+            // console.log(courseNum, " : ", effectiveGrade);
             if (effectiveGrade>=PASS_GRADE)
             {
                 passedCreditSum += parseFloat(credit);   
@@ -257,15 +269,27 @@ function setInputBoxes(tables)
                     creditInput.style.border = "2px solid "+ GREY_BORDER;
                 }
             }
+            //TODO: consider the option that THERE IS a grade here
+            // Check for Grades In Exemptions-Table
+            // for (let course of exemptionTable.children)
+            // {
+            //     // const exemptionCredit = exemptionTable.lastChild.previousElementSibling.children[2].innerText;
+            //     const exemptionCredit = course.children[2].innerText;
+            //     // const exemptionGrade = exemptionTable.lastChild.previousElementSibling.children[3].innerText.replace(/\D/g, '');
+            //     // const exemptionGrade = course.children[3].innerText.replace(/\D/g, '');
+            //     const exemptionGrade = course.children[3].innerText;
+            //     const input
+            //     console.log(exemptionGrade);
+            //     if(newCourseValidateInput(exemptionGrade, exemptionCredit))
+            //     {
+            //         sum+=exemptionGrade;
+            //         // creditSum+=exemptionCredit;
+            //     }
+            //     passedCreditSum += parseFloat(exemptionCredit);
+            //     creditSum += parseFloat(exemptionCredit);
+            // }
         }
         const newAverage = (sum/parseFloat(creditSum)).toFixed(1);
-        if (isWholeAverage)
-        {
-            //TODO: consider the option that THERE IS a grade here
-            const exemptionCredit = exemptionTable.lastChild.previousElementSibling.children[2].innerText;
-            passedCreditSum += parseFloat(exemptionCredit);
-            creditSum += parseFloat(exemptionCredit);
-        }
         creditSum += binaryPassCredit;
         
         const newSuccessRate = (passedCreditSum/creditSum).toFixed(2);
@@ -295,7 +319,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) =>
         sendResponse(true);
         const tables = document.querySelectorAll('tbody');
         const averages = document.querySelectorAll('tfoot');
-        console.log(tables);
+        // console.log(tables);
         setInputBoxes(tables);
         const coursesTable = setNewCousesTable();
         setTableButtons(averages, tables, coursesTable);
