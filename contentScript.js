@@ -161,12 +161,12 @@ function setInputBoxes(tables)
         const fict_grade = parseInt(entered_value);
         if (fict_grade<101 && fict_grade>0)
         {
-            input_box.style.border = "2px solid "+BLUE_BORDER;
+            input_box.style.border = "2px solid " + BLUE_BORDER;
             return fict_grade;
         }
         else
         {
-            input_box.style.border = "2px solid "+GREY_BORDER;
+            input_box.style.border = "2px solid " + GREY_BORDER;
             return real_grade;
         }  
     };
@@ -203,23 +203,26 @@ function setInputBoxes(tables)
             
             for (let course of tbody.children)
             {
-                // In case this is the last row in the exempti on table then don't do nothing
+                // In case this is the last row in the exemption on table then don't do nothing
                 if(!(isWholeAverage && tbody==tbodies[0] && course==tbody.lastChild.previousElementSibling))
                 {
 
                     const inputBox = course.children[4];
                     const activeButton = course.children[5];
-                    const realGrade = course.children[3].innerText.replace(/\D/g, '');
+                    // const realGrade = course.children[3].innerText.replace(/\D/g, '');
+                    const realGrade = course.children[3].innerText;
                     const effectiveGrade = checkInput(inputBox, realGrade);
                     const credit = course.children[2].innerText;
                     const courseNum = course.children[0].children[0].getAttribute("data-course");
+                    // console.log(courseNum, " : ",course.children[3].innerText);
+                    // if this is sport then one can repeate the course so just add up here without inserting to the map
                     if(courseNum.startsWith("3948") && activeButton.innerHTML==ACTIVE)
                     {
                         sum+=parseFloat(effectiveGrade);
                         passedCreditSum+=parseFloat(credit);
                         creditSum+=parseFloat(credit);
                     }
-                    else if((newCourseValidateInput(effectiveGrade, credit) || effectiveGrade=="עבר") && activeButton.innerHTML==ACTIVE)
+                    else if((newCourseValidateInput(effectiveGrade, credit) || effectiveGrade=="עבר" || effectiveGrade=="פטור עם ניקוד") && activeButton.innerHTML==ACTIVE)
                         grades.set(courseNum, [credit, effectiveGrade]);
                     if(activeButton.innerHTML==NON_ACTIVE)
                         inputBox.style.border = "2px solid "+GREY_BORDER;
@@ -230,19 +233,21 @@ function setInputBoxes(tables)
         // sum up the results using the map
         for(let [courseNum,[credit, effectiveGrade]] of grades)
         {
-            // console.log(courseNum, " : ", effectiveGrade);
             if (effectiveGrade>=PASS_GRADE)
             {
                 passedCreditSum += parseFloat(credit);   
             }
-            sum += (parseFloat(credit))*effectiveGrade;
+            if(!isNaN(effectiveGrade))
+                sum += (parseFloat(credit))*effectiveGrade;
             creditSum += parseFloat(credit);
-            if(effectiveGrade=="עבר")
+            if(effectiveGrade=="עבר" || effectiveGrade=="פטור עם ניקוד")
             {
+                creditSum -= parseFloat(credit); // we add the passed-sum later
                 passedCreditSum += parseFloat(credit);
                 binaryPassCredit += parseFloat(credit);
             }
         }
+        // add the fictive courses
         if (isWholeAverage==true)
         {
             for (let i=1; i<fictCoursesTable.children.length; i++)
@@ -308,7 +313,7 @@ function setInputBoxes(tables)
         {
             averageUI.innerHTML = newAverage;
             averageUI.style.color = BLUE_TEXT;
-        } 
+        }
     }
 
 
